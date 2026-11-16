@@ -58,6 +58,8 @@ class Services:
                             'visitor_token': visitor_token, 'count': count, 'attributes': attributes}
                 require(prior == incoming, 'encounter_conflict',
                         'Encounter ID was used with different contents', 409)
+                self.store.audit(db, event_id, 'encounter_replay', 'encounter', encounter_id,
+                                 {'zone': zone_code, 'count': count}, now)
                 return {'id': encounter_id, **prior, 'duplicate': True}
             event = self.store.one(db, 'SELECT * FROM events WHERE id=?', (event_id,))
             require(event['state'] in {'open', 'closed'}, 'event_not_open',
@@ -90,6 +92,9 @@ class Services:
                         'request_conflict', 'Request key was used for another batch', 409)
                 result = json.loads(previous['result'])
                 result['replayed'] = True
+                self.store.audit(db, event_id, 'encounter_batch_replay', 'request', request_key,
+                                 {'accepted': len(result.get('accepted', [])),
+                                  'rejected': len(result.get('rejected', []))}, now)
                 return result
             self.store.one(db, 'SELECT id FROM events WHERE id=?', (event_id,))
             accepted = []

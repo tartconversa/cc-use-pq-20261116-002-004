@@ -129,6 +129,22 @@ class Store:
             else:
                 db.commit()
 
+    @contextmanager
+    def consistent_read(self) -> Iterator[sqlite3.Connection]:
+        '''Read several tables as one point-in-time view.
+
+        Analysis endpoints compare a frozen snapshot against live tables.  If
+        each SELECT saw its own state, a publication committed between reads
+        would mix an old head version with data that belongs to a newer one.
+        A deferred BEGIN keeps the whole explanation on a single cut.
+        '''
+        with self.connection() as db:
+            db.execute('BEGIN')
+            try:
+                yield db
+            finally:
+                db.rollback()
+
     @staticmethod
     def one(db: sqlite3.Connection, query: str, values: tuple = ()) -> dict:
         row = db.execute(query, values).fetchone()

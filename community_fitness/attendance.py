@@ -25,6 +25,8 @@ class Attendance:
                 require((previous['team_id'], previous['member_ref'], previous['gate'],
                          previous['arrived_at']) == (team_id, member_ref, gate, arrived_at),
                         'request_conflict', 'Check-in request key has different contents', 409)
+                self.store.audit(db, event_id, 'attendance_replay', 'team', team_id,
+                                 {'member_ref': member_ref, 'gate': gate}, now)
                 return {'team_id': team_id, 'member_ref': member_ref, 'gate': gate,
                         'arrived_at': arrived_at, 'duplicate': True}
             event = self.store.one(db, 'SELECT * FROM events WHERE id=?', (event_id,))

@@ -148,6 +148,8 @@ class Competition:
             if existing_request:
                 require(existing_request['payload_hash'] == digest, 'request_conflict',
                         'Request key was used for different score content', 409)
+                self.store.audit(db, event_id, 'score_replay', 'team', team_id,
+                                 {'judge': judge_id}, now)
                 return json.loads(existing_request['result'])
             event = self.store.one(db, 'SELECT * FROM events WHERE id=?', (event_id,))
             require(event['state'] == 'open', 'event_locked', 'Scoring requires open event', 409)

@@ -12,6 +12,7 @@ from .competition import Competition
 from .disputes import Disputes
 from .errors import DomainError
 from .publication import Publication
+from .publication_analysis import PublicationAnalysis
 from .provenance import Provenance
 from .reconciliation import Reconciliation
 from .readiness import Readiness
@@ -121,6 +122,7 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     services = Services(store)
     analytics = Analytics(store)
     publication = Publication(store)
+    publication_analysis = PublicationAnalysis(store)
     provenance = Provenance(store)
     attendance = Attendance(store)
     disputes = Disputes(store)
@@ -294,6 +296,10 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     @application.get('/events/{event_id}/snapshots-compare')
     def difference(event_id: str, older: int, newer: int):
         return publication.difference(event_id, older, newer)
+
+    @application.get('/events/{event_id}/publication-analysis')
+    def publication_analysis_view(event_id: str):
+        return publication_analysis.explain(event_id)
 
     @application.get('/events/{event_id}/export/standings.csv')
     def standings_csv(event_id: str, version: int | None = None):
